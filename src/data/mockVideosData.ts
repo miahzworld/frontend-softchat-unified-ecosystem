@@ -1,13 +1,14 @@
 
-import { VideoItem } from "@/types/video";
+import { VideoItem, AdData } from "@/types/video";
 
-export const mockAdData = {
-  imageUrl: "https://i.imgur.com/MDchpyC.jpg",
+export const mockAdData: AdData = {
+  id: "ad1",
   title: "Premium Headphones",
   description: "Experience high-quality sound with our premium noise-cancelling headphones",
-  ctaText: "Shop Now",
-  ctaUrl: "/marketplace",
-  advertiser: "SoundWave Audio",
+  cta: "Shop Now",
+  image: "https://i.imgur.com/MDchpyC.jpg",
+  url: "/marketplace",
+  sponsor: "SoundWave Audio"
 };
 
 export const mockVideos: VideoItem[] = [
@@ -21,7 +22,7 @@ export const mockVideos: VideoItem[] = [
     shares: 16,
     tags: ["beauty", "makeup", "silver"],
     author: {
-      id: "user1", // Added ID
+      id: "user1",
       name: "Sophia Styles",
       username: "sophiastyles",
       avatar: "https://randomuser.me/api/portraits/women/44.jpg",

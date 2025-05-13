@@ -1,7 +1,6 @@
-
 import { useState, useCallback, useEffect } from "react";
 import { ContentItem, VideoItem, AdItem } from "@/types/video";
-import { mockAdData } from "@/data/mockVideosData";
+import { mockAdData, mockVideos } from "@/data/mockVideosData";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -19,6 +18,28 @@ export const useVideos = () => {
       setIsLoading(true);
       
       try {
+        // Check if video_url column exists in posts table
+        const { data: columnCheck, error: columnError } = await supabase
+          .rpc('check_column_exists', { 
+            table_name: 'posts', 
+            column_name: 'video_url' 
+          });
+          
+        const videoUrlExists = columnCheck === true;
+        
+        if (columnError || !videoUrlExists) {
+          // If video_url doesn't exist or error, use mock data
+          console.log("Using mock video data because video_url column doesn't exist");
+          const itemsWithAd = [
+            ...mockVideos.slice(0, 2),
+            { isAd: true, ad: mockAdData } as AdItem,
+            ...mockVideos.slice(2)
+          ];
+          setAllItems(itemsWithAd);
+          setIsLoading(false);
+          return;
+        }
+        
         // Fetch video posts from Supabase
         const { data: posts, error } = await supabase
           .from('posts')
@@ -43,7 +64,6 @@ export const useVideos = () => {
         
         if (!posts || posts.length === 0) {
           // If no videos in database, use mock data
-          const { mockVideos } = await import('@/data/mockVideosData');
           const itemsWithAd = [
             ...mockVideos.slice(0, 2),
             { isAd: true, ad: mockAdData } as AdItem,
@@ -91,7 +111,6 @@ export const useVideos = () => {
       } catch (error) {
         console.error("Error fetching videos:", error);
         // Fall back to mock data on error
-        const { mockVideos } = await import('@/data/mockVideosData');
         const itemsWithAd = [
           ...mockVideos.slice(0, 2),
           { isAd: true, ad: mockAdData } as AdItem,
@@ -166,7 +185,28 @@ export const useVideos = () => {
   const refreshVideos = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Re-fetch videos (same logic as in useEffect)
+      // Check if video_url column exists
+      const { data: columnCheck } = await supabase
+        .rpc('check_column_exists', { 
+          table_name: 'posts', 
+          column_name: 'video_url' 
+        });
+        
+      const videoUrlExists = columnCheck === true;
+      
+      if (!videoUrlExists) {
+        // Use mock data if column doesn't exist
+        const itemsWithAd = [
+          ...mockVideos.slice(0, 2),
+          { isAd: true, ad: mockAdData } as AdItem,
+          ...mockVideos.slice(2)
+        ];
+        setAllItems(itemsWithAd);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Re-fetch videos
       const { data: posts, error } = await supabase
         .from('posts')
         .select(`
@@ -187,7 +227,6 @@ export const useVideos = () => {
       
       if (!posts || posts.length === 0) {
         // Fall back to mock data if no videos
-        const { mockVideos } = await import('@/data/mockVideosData');
         const itemsWithAd = [
           ...mockVideos.slice(0, 2),
           { isAd: true, ad: mockAdData } as AdItem,
@@ -197,7 +236,7 @@ export const useVideos = () => {
         return;
       }
       
-      // Transform posts into VideoItem format
+      // Transform posts to VideoItems
       const videoItems: VideoItem[] = posts.map(post => {
         const profile = post.profiles as any;
         return {
@@ -221,7 +260,7 @@ export const useVideos = () => {
         };
       });
       
-      // Insert an ad after every few videos
+      // Insert ads
       const itemsWithAd: ContentItem[] = [];
       videoItems.forEach((video, index) => {
         itemsWithAd.push(video);
@@ -234,7 +273,6 @@ export const useVideos = () => {
     } catch (error) {
       console.error("Error refreshing videos:", error);
       // Fall back to mock data on error
-      const { mockVideos } = await import('@/data/mockVideosData');
       const itemsWithAd = [
         ...mockVideos.slice(0, 2),
         { isAd: true, ad: mockAdData } as AdItem,

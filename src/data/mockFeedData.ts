@@ -1,7 +1,8 @@
 import { PostType } from "@/types/post";
-import { User, Story, PostComment } from "@/types/user";
+import { User, PostComment, Story as UserStory } from "@/types/user";
 
-export interface Story {
+// Renamed to StoryItem to avoid conflict
+export interface StoryItem {
   id: string;
   username: string;
   avatar: string;
@@ -196,7 +197,7 @@ export const mockComments: PostComment[] = [
   }
 ];
 
-export const mockStories: Story[] = [
+export const mockStories: StoryItem[] = [
   {
     id: "1",
     username: "You",

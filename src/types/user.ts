@@ -1,5 +1,4 @@
-
-import { User } from "@supabase/supabase-js";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 export interface UserProfile {
   id: string;
@@ -16,8 +15,8 @@ export interface UserProfile {
   bank_name?: string;
 }
 
-export interface ExtendedUser extends User {
-  username: string; // Making this required since we need it in multiple components
+export interface ExtendedUser extends SupabaseUser {
+  username: string;
   name: string;
   avatar: string;
   points: number;
@@ -72,8 +71,8 @@ export interface ChatConversation {
   };
 }
 
-// Add User interface export
-export interface User {
+// Renamed to AppUser to avoid conflict
+export interface AppUser {
   id: string;
   name: string;
   username: string;
@@ -81,7 +80,7 @@ export interface User {
   verified?: boolean;
 }
 
-// Add Story interfaces
+// Story interfaces
 export interface Story {
   id: string;
   username: string;
@@ -98,7 +97,7 @@ export interface StoryContent {
 
 export type UserLevel = "bronze" | "silver" | "gold" | "platinum" | "diamond";
 
-// Add new types for P2P marketplace
+// P2P marketplace types
 export interface P2POffer {
   id: string;
   type: 'buy' | 'sell';

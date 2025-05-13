@@ -51,7 +51,7 @@ export const useProfile = ({ username }: UseProfileProps = {}) => {
               ...profileData,
               id: profileData.user_id
             };
-            const extendedUser = formatUserData(enhancedProfile) as ExtendedUser;
+            const extendedUser = transformUser(enhancedProfile) as ExtendedUser;
             setProfileUser(extendedUser);
             await fetchUserData(profileData.user_id);
           } else {
@@ -155,37 +155,24 @@ export const useProfile = ({ username }: UseProfileProps = {}) => {
     }));
   };
 
-  const formatUserData = (profileData: any): ExtendedUser => {
-    const formattedUser: any = {
-      id: profileData.user_id || profileData.id,
-      email: profileData.email || '',
-      name: profileData.full_name || profileData.username || '',
-      username: profileData.username || 'user', // Add username to ensure it meets ExtendedUser interface
-      avatar: profileData.avatar_url || '/placeholder.svg',
-      points: profileData.points || 0,
-      level: profileData.level || 'bronze',
-      role: profileData.role || 'user',
-      created_at: profileData.created_at || new Date().toISOString(),
-      user_metadata: {
-        name: profileData.full_name || profileData.username || '',
-        avatar: profileData.avatar_url || '/placeholder.svg',
-      },
-      profile: {
-        id: profileData.user_id || profileData.id,
-        username: profileData.username,
-        full_name: profileData.full_name || profileData.username || '',
-        avatar_url: profileData.avatar_url || '/placeholder.svg',
-        bio: profileData.bio || '',
-        is_verified: profileData.is_verified || false,
-        points: profileData.points || 0,
-        level: profileData.level || 'bronze',
-        role: profileData.role || 'user',
-      },
-      app_metadata: {},
-      aud: "authenticated"
-    };
+  const transformUser = (userData: any): ExtendedUser => {
+    if (!userData) return null as unknown as ExtendedUser;
 
-    return formattedUser as ExtendedUser;
+    // Add username property from profile or user_metadata
+    const username = userData.profile?.username || 
+                  userData.user_metadata?.username || 
+                  userData.email?.split('@')[0] || 
+                  'user';
+
+    return {
+      ...userData,
+      username,  // Add the username property
+      name: userData.name || userData.user_metadata?.name || username,
+      avatar: userData.avatar || userData.user_metadata?.avatar || '/placeholder.svg',
+      points: userData.profile?.points || 0,
+      level: userData.profile?.level || 'bronze',
+      role: userData.profile?.role || 'user',
+    } as ExtendedUser;
   };
 
   const createMockProfile = (username: string) => {
