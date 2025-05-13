@@ -160,6 +160,7 @@ export const useProfile = ({ username }: UseProfileProps = {}) => {
       id: profileData.user_id || profileData.id,
       email: profileData.email || '',
       name: profileData.full_name || profileData.username || '',
+      username: profileData.username || 'user', // Add username to ensure it meets ExtendedUser interface
       avatar: profileData.avatar_url || '/placeholder.svg',
       points: profileData.points || 0,
       level: profileData.level || 'bronze',

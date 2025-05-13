@@ -1,3 +1,4 @@
+
 import { User } from "@supabase/supabase-js";
 
 export interface UserProfile {
@@ -69,6 +70,30 @@ export interface ChatConversation {
     avatar: string;
     is_online: boolean;
   };
+}
+
+// Add User interface export
+export interface User {
+  id: string;
+  name: string;
+  username: string;
+  avatar: string;
+  verified?: boolean;
+}
+
+// Add Story interfaces
+export interface Story {
+  id: string;
+  username: string;
+  avatar: string;
+  hasNewStory?: boolean;
+  isUser: boolean;
+}
+
+export interface StoryContent {
+  id: string;
+  type: 'image' | 'video';
+  url: string;
 }
 
 export type UserLevel = "bronze" | "silver" | "gold" | "platinum" | "diamond";

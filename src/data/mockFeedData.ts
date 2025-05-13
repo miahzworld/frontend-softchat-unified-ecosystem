@@ -1,5 +1,5 @@
 import { PostType } from "@/types/post";
-import { User } from "@/types/user";
+import { User, Story, PostComment } from "@/types/user";
 
 export interface Story {
   id: string;
@@ -154,52 +154,94 @@ export const mockPosts: Post[] = [
   },
 ];
 
+export const mockComments: PostComment[] = [
+  {
+    id: "c1",
+    post_id: "1",
+    user_id: "1",
+    content: "This is such a beautiful place! Where exactly is this park?",
+    created_at: "2024-01-28T12:30:00Z",
+    user: {
+      name: "Sarah Smith",
+      username: "sarah.smith",
+      avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+      is_verified: false
+    }
+  },
+  {
+    id: "c2",
+    post_id: "1",
+    user_id: "3",
+    content: "I was there last weekend! The weather was perfect.",
+    created_at: "2024-01-28T13:15:00Z",
+    user: {
+      name: "Mike Johnson",
+      username: "mike.johnson",
+      avatar: "https://randomuser.me/api/portraits/men/45.jpg",
+      is_verified: true
+    }
+  },
+  {
+    id: "c3",
+    post_id: "1",
+    user_id: "4",
+    content: "Great shot! What camera did you use?",
+    created_at: "2024-01-28T14:00:00Z",
+    user: {
+      name: "Emma Davis",
+      username: "emma.davis",
+      avatar: "https://randomuser.me/api/portraits/women/23.jpg",
+      is_verified: false
+    }
+  }
+];
+
 export const mockStories: Story[] = [
   {
     id: "1",
     username: "You",
     avatar: "/placeholder.svg",
     hasNewStory: true,
-    isUser: true, // Added isUser property
+    isUser: true,
   },
   {
     id: "2",
     username: "john.doe",
     avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     hasNewStory: true,
-    isUser: false, // Added isUser property
+    isUser: false,
   },
   {
     id: "3",
     username: "sarah.smith",
     avatar: "https://randomuser.me/api/portraits/women/44.jpg",
     hasNewStory: true,
-    isUser: false, // Added isUser property
+    isUser: false,
   },
   {
     id: "4",
     username: "mike.johnson",
     avatar: "https://randomuser.me/api/portraits/men/45.jpg",
-    isUser: false, // Added isUser property
+    isUser: false,
   },
   {
     id: "5",
     username: "emma.davis",
     avatar: "https://randomuser.me/api/portraits/women/23.jpg",
     hasNewStory: true,
-    isUser: false, // Added isUser property
+    isUser: false,
   },
   {
     id: "6",
     username: "alex.wilson",
     avatar: "https://randomuser.me/api/portraits/men/83.jpg",
-    isUser: false, // Added isUser property
+    isUser: false,
   },
   {
     id: "7",
     username: "lily.taylor",
     avatar: "https://randomuser.me/api/portraits/women/66.jpg",
     hasNewStory: true,
-    isUser: false, // Added isUser property
+    isUser: false,
   }
 ];

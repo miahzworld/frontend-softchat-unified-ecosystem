@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Story, StoryContent } from "@/types/user";
 import { mockStories } from "@/data/mockFeedData";
@@ -39,24 +40,11 @@ export function useStories() {
     fetchStories();
   }, []);
 
-  const viewStory = (story: Story) => {
-    setActiveStory(story);
-    setStoryContent([
-      { id: '1', type: 'image', url: 'https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8M3x8ZG9nfGVufDB8fDB8fA%3D%3D&auto=format&fit=crop&w=500&q=60' },
-    ]);
-  };
-
-  const closeStory = () => {
-    setActiveStory(null);
-    setStoryContent([]);
-  };
-
   return {
     stories,
     activeStory,
     storyContent,
     viewStory: (story: Story) => {
-      // Implement this function if needed
       setActiveStory(story);
       // Typically you'd fetch the content of the story here
       setStoryContent([

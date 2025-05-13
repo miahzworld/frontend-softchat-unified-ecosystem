@@ -54,6 +54,7 @@ export const useVideos = () => {
           // Transform posts into VideoItem format
           const videoItems: VideoItem[] = posts.map(post => {
             const profile = post.profiles as any;
+            
             return {
               id: post.id,
               url: post.video_url || "",
@@ -117,7 +118,7 @@ export const useVideos = () => {
         payload => {
           // Handle new video post
           console.log('New video posted:', payload);
-          // You'd typically fetch the new video details and add it to state
+          refreshVideos(); // Refresh videos when a new one is posted
         }
       )
       .subscribe();
