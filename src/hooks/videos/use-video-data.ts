@@ -50,7 +50,7 @@ export const useVideoData = () => {
       
       if (columnError || !videoUrlExists) {
         // If video_url doesn't exist or error, use mock data
-        console.log("Using mock video data because video_url column doesn't exist");
+        console.log("Using mock video data because video_url column doesn't exist or error occurred:", columnError);
         const itemsWithAd = [
           ...mockVideos.slice(0, 2),
           { isAd: true, ad: mockAdData } as AdItem,
@@ -93,7 +93,21 @@ export const useVideoData = () => {
         setAllItems(itemsWithAd);
       } else {
         // Transform posts into VideoItem format
-        const videoItems: VideoItem[] = posts.map(post => {
+        // Check if posts is actually an error object
+        if ('code' in posts || 'message' in posts) {
+          console.error("Error in posts data:", posts);
+          // Use mock data as fallback
+          const itemsWithAd = [
+            ...mockVideos.slice(0, 2),
+            { isAd: true, ad: mockAdData } as AdItem,
+            ...mockVideos.slice(2)
+          ];
+          setAllItems(itemsWithAd);
+          return;
+        }
+        
+        // If it's actual data, process it
+        const videoItems: VideoItem[] = posts.map((post: any) => {
           const profile = post.profiles as any;
           
           return {

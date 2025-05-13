@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -163,7 +164,8 @@ export const useProfile = ({ username }: UseProfileProps = {}) => {
       avatar: user.profile?.avatar_url || user.user_metadata?.avatar || '/placeholder.svg',
       points: user.profile?.points || 0,
       level: user.profile?.level || 'bronze',
-      role: user.profile?.role || 'user'
+      role: user.profile?.role || 'user',
+      app_metadata: user.app_metadata || {}
     } as ExtendedUser;
   };
 
@@ -172,6 +174,7 @@ export const useProfile = ({ username }: UseProfileProps = {}) => {
     const mockUser = {
       id: mockUserId,
       email: `${username}@example.com`,
+      username: username,  // Add this to fix the ExtendedUser type error
       name: username,
       avatar: `https://ui-avatars.com/api/?name=${username}&background=random`,
       points: Math.floor(Math.random() * 5000) + 500,

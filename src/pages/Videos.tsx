@@ -5,7 +5,7 @@ import FooterNav from "@/components/layout/FooterNav";
 import VideoCard from "@/components/videos/VideoCard";
 import VideoUpload from "@/components/videos/VideoUpload";
 import AdCard from "@/components/videos/AdCard";
-import { useVideos } from "@/hooks/use-videos";
+import { useVideos } from "@/hooks/videos";
 import { VideoItem, AdItem } from "@/types/video";
 import { ArrowUpIcon, ArrowDownIcon, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
