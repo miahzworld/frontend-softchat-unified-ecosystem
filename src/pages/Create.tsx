@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Image, Video, UserPlus, Lock, Globe, Users } from "lucide-react";
 import { useNotification } from "@/hooks/use-notification";
 import FooterNav from "@/components/layout/FooterNav";
+import { supabase } from "@/lib/supabase/client";
+import { v4 as uuidv4 } from 'uuid';
 
 const Create = () => {
   const { user } = useAuth();
@@ -18,6 +20,11 @@ const Create = () => {
   const [isPosting, setIsPosting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [videoCaption, setVideoCaption] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
+  const [videoTags, setVideoTags] = useState("");
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -32,20 +39,140 @@ const Create = () => {
       reader.readAsDataURL(file);
     }
   };
+
+  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (!file.type.startsWith('video/')) {
+        notify.error("Please select a valid video file");
+        return;
+      }
+      
+      setVideoFile(file);
+      
+      // Create preview URL
+      const url = URL.createObjectURL(file);
+      setVideoPreviewUrl(url);
+    }
+  };
   
-  const handlePostSubmit = () => {
+  const handlePostSubmit = async () => {
     if (!postContent.trim() && !selectedFile) return;
     
     setIsPosting(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      if (!user) {
+        notify.error("You must be logged in to post");
+        return;
+      }
+
+      let imageUrl = null;
+      
+      // Upload image if there is one
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `${uuidv4()}.${fileExt}`;
+        const filePath = `${user.id}/${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('posts')
+          .upload(filePath, selectedFile);
+          
+        if (uploadError) throw uploadError;
+        
+        const { data: urlData } = supabase.storage
+          .from('posts')
+          .getPublicUrl(filePath);
+          
+        imageUrl = urlData.publicUrl;
+      }
+      
+      // Create post
+      const { error: postError } = await supabase
+        .from('posts')
+        .insert({
+          user_id: user.id,
+          content: postContent,
+          image_url: imageUrl,
+          type: 'text',
+          softpoints: Math.floor(Math.random() * 20) + 1, // Random points for demo
+        });
+        
+      if (postError) throw postError;
+      
       notify.success("Post created successfully!");
       setPostContent("");
       setSelectedFile(null);
       setPreviewUrl(null);
+    } catch (error: any) {
+      console.error("Error creating post:", error);
+      notify.error(error.message || "Failed to create post");
+    } finally {
       setIsPosting(false);
-    }, 1500);
+    }
+  };
+
+  const handleVideoUpload = async () => {
+    if (!videoFile) {
+      notify.error("Please select a video to upload");
+      return;
+    }
+    
+    setIsUploading(true);
+    
+    try {
+      if (!user) {
+        notify.error("You must be logged in to post");
+        return;
+      }
+      
+      // Upload video
+      const fileExt = videoFile.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('videos')
+        .upload(filePath, videoFile);
+        
+      if (uploadError) throw uploadError;
+      
+      const { data: urlData } = supabase.storage
+        .from('videos')
+        .getPublicUrl(filePath);
+        
+      // Parse tags
+      const tags = videoTags
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0);
+      
+      // Create post
+      const { error: postError } = await supabase
+        .from('posts')
+        .insert({
+          user_id: user.id,
+          content: videoCaption,
+          video_url: urlData.publicUrl,
+          type: 'video',
+          tags: tags,
+          softpoints: Math.floor(Math.random() * 50) + 5, // Random points for demo
+        });
+        
+      if (postError) throw postError;
+      
+      notify.success("Video uploaded successfully!");
+      setVideoCaption("");
+      setVideoFile(null);
+      setVideoPreviewUrl(null);
+      setVideoTags("");
+    } catch (error: any) {
+      console.error("Error uploading video:", error);
+      notify.error(error.message || "Failed to upload video");
+    } finally {
+      setIsUploading(false);
+    }
   };
   
   const handlePrivacyChange = (value: "public" | "friends" | "private") => {
@@ -207,11 +334,45 @@ const Create = () => {
             <Textarea
               placeholder="Add a description for your video..."
               className="min-h-[80px] resize-none"
-              value={postContent}
-              onChange={(e) => setPostContent(e.target.value)}
+              value={videoCaption}
+              onChange={(e) => setVideoCaption(e.target.value)}
             />
             
-            {!previewUrl && (
+            <div className="space-y-2">
+              <label htmlFor="video-tags" className="text-sm font-medium">
+                Tags (comma separated)
+              </label>
+              <input
+                id="video-tags"
+                type="text"
+                className="w-full p-2 border rounded-md"
+                placeholder="fun, trending, challenge"
+                value={videoTags}
+                onChange={(e) => setVideoTags(e.target.value)}
+              />
+            </div>
+            
+            {videoPreviewUrl ? (
+              <div className="relative">
+                <video 
+                  src={videoPreviewUrl} 
+                  controls
+                  className="w-full rounded-lg max-h-80 object-cover"
+                />
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2 h-6 w-6 rounded-full"
+                  onClick={() => {
+                    if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
+                    setVideoFile(null);
+                    setVideoPreviewUrl(null);
+                  }}
+                >
+                  &times;
+                </Button>
+              </div>
+            ) : (
               <div 
                 className="border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50"
                 onClick={() => document.getElementById("video-upload")?.click()}
@@ -222,41 +383,20 @@ const Create = () => {
               </div>
             )}
             
-            {previewUrl && (
-              <div className="relative">
-                <video 
-                  src={previewUrl} 
-                  controls
-                  className="w-full rounded-lg max-h-80 object-cover"
-                />
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  className="absolute top-2 right-2 h-6 w-6 rounded-full"
-                  onClick={() => {
-                    setSelectedFile(null);
-                    setPreviewUrl(null);
-                  }}
-                >
-                  &times;
-                </Button>
-              </div>
-            )}
-            
             <input 
               id="video-upload" 
               type="file" 
               accept="video/*" 
               className="hidden" 
-              onChange={handleFileChange} 
+              onChange={handleVideoFileChange} 
             />
             
             <div className="flex justify-end">
               <Button 
-                onClick={handlePostSubmit} 
-                disabled={isPosting || !selectedFile}
+                onClick={handleVideoUpload} 
+                disabled={isUploading || !videoFile}
               >
-                {isPosting ? "Uploading..." : "Upload Video"}
+                {isUploading ? "Uploading..." : "Upload Video"}
               </Button>
             </div>
           </div>

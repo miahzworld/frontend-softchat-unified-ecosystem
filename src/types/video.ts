@@ -7,7 +7,10 @@ export type VideoItem = {
   likes: number;
   comments: number;
   shares: number;
+  tags?: string[];
+  softpoints?: number;
   author: {
+    id: string;
     name: string;
     username: string;
     avatar: string;
