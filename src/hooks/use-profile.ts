@@ -155,23 +155,15 @@ export const useProfile = ({ username }: UseProfileProps = {}) => {
     }));
   };
 
-  const transformUser = (userData: any): ExtendedUser => {
-    if (!userData) return null as unknown as ExtendedUser;
-
-    // Add username property from profile or user_metadata
-    const username = userData.profile?.username || 
-                  userData.user_metadata?.username || 
-                  userData.email?.split('@')[0] || 
-                  'user';
-
+  const transformUser = (user: any): ExtendedUser => {
     return {
-      ...userData,
-      username,  // Add the username property
-      name: userData.name || userData.user_metadata?.name || username,
-      avatar: userData.avatar || userData.user_metadata?.avatar || '/placeholder.svg',
-      points: userData.profile?.points || 0,
-      level: userData.profile?.level || 'bronze',
-      role: userData.profile?.role || 'user',
+      ...user,
+      username: user.profile?.username || user.user_metadata?.username || user.email?.split('@')[0] || 'user',
+      name: user.profile?.full_name || user.user_metadata?.name || 'User',
+      avatar: user.profile?.avatar_url || user.user_metadata?.avatar || '/placeholder.svg',
+      points: user.profile?.points || 0,
+      level: user.profile?.level || 'bronze',
+      role: user.profile?.role || 'user'
     } as ExtendedUser;
   };
 
