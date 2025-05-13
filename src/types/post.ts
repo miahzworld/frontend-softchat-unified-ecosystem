@@ -8,7 +8,7 @@ export interface User {
     verified: boolean;
 }
 
-export type PostType = 'text' | 'video' | 'image';
+export type PostType = 'text' | 'video' | 'image' | 'story';
 
 export type CreatePost = {
     id: string;

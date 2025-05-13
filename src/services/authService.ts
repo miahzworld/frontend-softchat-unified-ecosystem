@@ -17,6 +17,7 @@ export const enhanceUserWithProfile = async (supabaseUser: User | null): Promise
       profile,
       // Add convenience properties
       name: profile?.full_name || supabaseUser.email?.split('@')[0] || 'User',
+      username: profile?.username || supabaseUser.email?.split('@')[0] || 'user',  // Added username property
       avatar: profile?.avatar_url || '/placeholder.svg',
       points,
       level,
@@ -31,6 +32,7 @@ export const enhanceUserWithProfile = async (supabaseUser: User | null): Promise
     return {
       ...supabaseUser,
       name: supabaseUser.email?.split('@')[0] || 'User',
+      username: supabaseUser.email?.split('@')[0] || 'user',  // Added username property
       avatar: '/placeholder.svg',
       points: 0,
       level: 'bronze',

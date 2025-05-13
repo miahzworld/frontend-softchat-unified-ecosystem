@@ -1,4 +1,3 @@
-
 import { User } from "@supabase/supabase-js";
 
 export interface UserProfile {
@@ -17,7 +16,7 @@ export interface UserProfile {
 }
 
 export interface ExtendedUser extends User {
-  username(arg0: string, username: any): unknown;
+  username: string; // Making this required since we need it in multiple components
   name: string;
   avatar: string;
   points: number;

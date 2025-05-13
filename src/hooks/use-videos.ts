@@ -30,13 +30,16 @@ export const useVideos = () => {
             softpoints,
             user_id,
             created_at,
-            profiles(name, username, avatar, is_verified)
+            profiles:user_id(name, username, avatar, is_verified)
           `)
           .eq('type', 'video')
           .order('created_at', { ascending: false })
           .limit(10);
           
-        if (error) throw error;
+        if (error) {
+          console.error("Error fetching videos:", error);
+          throw error;
+        }
         
         if (!posts || posts.length === 0) {
           // If no videos in database, use mock data
@@ -53,8 +56,8 @@ export const useVideos = () => {
             const profile = post.profiles as any;
             return {
               id: post.id,
-              url: post.video_url,
-              thumbnail: post.video_url + '?thumbnail=true',
+              url: post.video_url || "",
+              thumbnail: (post.video_url || "") + '?thumbnail=true',
               description: post.content,
               likes: Math.floor(Math.random() * 100) + 5, // Mock data for now
               comments: Math.floor(Math.random() * 30), // Mock data for now
@@ -173,7 +176,7 @@ export const useVideos = () => {
           softpoints,
           user_id,
           created_at,
-          profiles(name, username, avatar, is_verified)
+          profiles:user_id(name, username, avatar, is_verified)
         `)
         .eq('type', 'video')
         .order('created_at', { ascending: false })
@@ -181,13 +184,25 @@ export const useVideos = () => {
         
       if (error) throw error;
       
+      if (!posts || posts.length === 0) {
+        // Fall back to mock data if no videos
+        const { mockVideos } = await import('@/data/mockVideosData');
+        const itemsWithAd = [
+          ...mockVideos.slice(0, 2),
+          { isAd: true, ad: mockAdData } as AdItem,
+          ...mockVideos.slice(2)
+        ];
+        setAllItems(itemsWithAd);
+        return;
+      }
+      
       // Transform posts into VideoItem format
       const videoItems: VideoItem[] = posts.map(post => {
         const profile = post.profiles as any;
         return {
           id: post.id,
-          url: post.video_url,
-          thumbnail: post.video_url + '?thumbnail=true',
+          url: post.video_url || "",
+          thumbnail: (post.video_url || "") + '?thumbnail=true',
           description: post.content,
           likes: Math.floor(Math.random() * 100) + 5, 
           comments: Math.floor(Math.random() * 30),
@@ -217,6 +232,14 @@ export const useVideos = () => {
       setAllItems(itemsWithAd);
     } catch (error) {
       console.error("Error refreshing videos:", error);
+      // Fall back to mock data on error
+      const { mockVideos } = await import('@/data/mockVideosData');
+      const itemsWithAd = [
+        ...mockVideos.slice(0, 2),
+        { isAd: true, ad: mockAdData } as AdItem,
+        ...mockVideos.slice(2)
+      ];
+      setAllItems(itemsWithAd);
     } finally {
       setIsLoading(false);
     }

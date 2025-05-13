@@ -10,7 +10,10 @@ export const mockVideos: VideoItem[] = [
     likes: 12543,
     comments: 432,
     shares: 129,
+    tags: ["nature", "ocean", "waves"],
+    softpoints: 15,
     author: {
+      id: "user1", // Added id property
       name: "Sarah Johnson",
       username: "sarahj",
       avatar: "https://randomuser.me/api/portraits/women/44.jpg",
@@ -26,7 +29,10 @@ export const mockVideos: VideoItem[] = [
     likes: 8432,
     comments: 256,
     shares: 78,
+    tags: ["spring", "flowers", "nature"],
+    softpoints: 8,
     author: {
+      id: "user2", // Added id property
       name: "Michael Chen",
       username: "mikechen",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
@@ -42,7 +48,10 @@ export const mockVideos: VideoItem[] = [
     likes: 5672,
     comments: 187,
     shares: 42,
+    tags: ["fitness", "running", "citylife"],
+    softpoints: 12,
     author: {
+      id: "user3", // Added id property
       name: "Jessica Williams",
       username: "jesswill",
       avatar: "https://randomuser.me/api/portraits/women/28.jpg",
