@@ -192,5 +192,5 @@ export const mockComments: PostComment[] = [
       avatar: '/placeholder.svg',
       is_verified: true
     }
-  },
+  }
 ];
