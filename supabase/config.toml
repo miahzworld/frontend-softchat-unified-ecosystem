@@ -1,1 +1,5 @@
+
 project_id = "hjebzdekquczudhrygns"
+
+[functions.video-ai-features]
+verify_jwt = true

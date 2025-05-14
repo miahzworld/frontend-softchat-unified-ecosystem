@@ -260,6 +260,7 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          filter: string | null
           id: string
           image_url: string | null
           softpoints: number | null
@@ -272,6 +273,7 @@ export type Database = {
         Insert: {
           content: string
           created_at?: string
+          filter?: string | null
           id?: string
           image_url?: string | null
           softpoints?: number | null
@@ -284,6 +286,7 @@ export type Database = {
         Update: {
           content?: string
           created_at?: string
+          filter?: string | null
           id?: string
           image_url?: string | null
           softpoints?: number | null
@@ -465,7 +468,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_column_exists: {
+        Args: { table_name: string; column_name: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

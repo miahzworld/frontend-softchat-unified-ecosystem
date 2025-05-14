@@ -9,6 +9,7 @@ export type VideoItem = {
   shares: number;
   tags?: string[];
   softpoints?: number;
+  filter?: string;
   author: {
     id: string;
     name: string;
@@ -35,3 +36,10 @@ export type AdItem = {
 };
 
 export type ContentItem = VideoItem | AdItem;
+
+export type VideoFilter = "none" | "softchat" | "blackwhite" | "vibrant" | "smooth" | "dark";
+
+export interface VideoEffect {
+  type: string;
+  value: number;
+}

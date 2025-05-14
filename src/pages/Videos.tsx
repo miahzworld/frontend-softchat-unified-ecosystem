@@ -10,11 +10,13 @@ import { VideoItem, AdItem } from "@/types/video";
 import { ArrowUpIcon, ArrowDownIcon, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotification } from "@/hooks/use-notification";
+import VideoEditor from "@/components/videos/VideoEditor";
 
 const Videos = () => {
   const { user } = useAuth();
   const notification = useNotification();
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showVideoEditor, setShowVideoEditor] = useState(false);
   const {
     currentItem,
     swipeHandlers,

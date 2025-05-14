@@ -16,12 +16,14 @@ import {
   Upload, 
   Camera, 
   X, 
-  Play
+  Play,
+  Pencil
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase/client";
 import { v4 as uuidv4 } from 'uuid';
+import VideoEditor from "./VideoEditor";
 
 interface VideoUploadProps {
   isOpen: boolean;
@@ -36,6 +38,7 @@ const VideoUpload = ({ isOpen, onClose, onSuccess }: VideoUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [showEditor, setShowEditor] = useState(false);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
@@ -59,6 +62,9 @@ const VideoUpload = ({ isOpen, onClose, onSuccess }: VideoUploadProps) => {
     setVideoFile(file);
     const url = URL.createObjectURL(file);
     setVideoPreview(url);
+    
+    // Open editor immediately with the selected video
+    setShowEditor(true);
   };
 
   const startRecording = async () => {
@@ -90,6 +96,9 @@ const VideoUpload = ({ isOpen, onClose, onSuccess }: VideoUploadProps) => {
         
         // Stop all tracks of the stream
         stream.getTracks().forEach(track => track.stop());
+        
+        // Open editor immediately with the recorded video
+        setShowEditor(true);
       };
 
       if (videoPreviewRef.current) {
@@ -209,123 +218,152 @@ const VideoUpload = ({ isOpen, onClose, onSuccess }: VideoUploadProps) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleCancel}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{isRecording ? "Recording Video" : "Upload Video"}</DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen && !showEditor} onOpenChange={handleCancel}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{isRecording ? "Recording Video" : "Upload Video"}</DialogTitle>
+          </DialogHeader>
 
-        <div className="space-y-4">
-          {isRecording ? (
-            <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
-              <video 
-                ref={videoPreviewRef} 
-                className="w-full h-full object-contain" 
-                muted 
-              />
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  onClick={stopRecording}
-                >
-                  Stop Recording
-                </Button>
+          <div className="space-y-4">
+            {isRecording ? (
+              <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
+                <video 
+                  ref={videoPreviewRef} 
+                  className="w-full h-full object-contain" 
+                  muted 
+                />
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={stopRecording}
+                  >
+                    Stop Recording
+                  </Button>
+                </div>
               </div>
-            </div>
-          ) : videoPreview ? (
-            <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
-              <video 
-                src={videoPreview} 
-                className="w-full h-full object-contain" 
-                controls 
-              />
-              <Button 
-                variant="destructive" 
-                size="icon" 
-                className="absolute top-2 right-2 h-8 w-8 rounded-full"
-                onClick={() => {
-                  URL.revokeObjectURL(videoPreview);
-                  setVideoPreview(null);
-                  setVideoFile(null);
-                }}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-4">
-              <div className="grid grid-cols-2 gap-4 w-full">
-                <Button 
-                  className="h-24 flex flex-col gap-2" 
-                  variant="outline"
-                  onClick={() => videoInputRef.current?.click()}
-                >
-                  <Upload className="h-8 w-8" />
-                  <span>Upload Video</span>
-                </Button>
+            ) : videoPreview ? (
+              <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
+                <video 
+                  src={videoPreview} 
+                  className="w-full h-full object-contain" 
+                  controls 
+                />
+                <div className="absolute top-2 right-2 flex gap-2">
+                  <Button 
+                    variant="default" 
+                    size="icon" 
+                    className="h-8 w-8 rounded-full bg-primary/80 hover:bg-primary"
+                    onClick={() => setShowEditor(true)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    size="icon" 
+                    className="h-8 w-8 rounded-full"
+                    onClick={() => {
+                      URL.revokeObjectURL(videoPreview);
+                      setVideoPreview(null);
+                      setVideoFile(null);
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-4">
+                <div className="grid grid-cols-2 gap-4 w-full">
+                  <Button 
+                    className="h-24 flex flex-col gap-2" 
+                    variant="outline"
+                    onClick={() => videoInputRef.current?.click()}
+                  >
+                    <Upload className="h-8 w-8" />
+                    <span>Upload Video</span>
+                  </Button>
+                  
+                  <Button 
+                    className="h-24 flex flex-col gap-2" 
+                    variant="outline"
+                    onClick={startRecording}
+                  >
+                    <Camera className="h-8 w-8" />
+                    <span>Record Video</span>
+                  </Button>
+                </div>
                 
-                <Button 
-                  className="h-24 flex flex-col gap-2" 
-                  variant="outline"
-                  onClick={startRecording}
-                >
-                  <Camera className="h-8 w-8" />
-                  <span>Record Video</span>
-                </Button>
-              </div>
-              
-              <Input 
-                ref={videoInputRef}
-                type="file" 
-                accept="video/*" 
-                className="hidden" 
-                onChange={handleFileChange} 
-              />
-            </div>
-          )}
-
-          {(videoFile || isRecording) && !isRecording && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="caption">Caption</Label>
-                <Textarea 
-                  id="caption"
-                  placeholder="Add a caption to your video"
-                  value={caption}
-                  onChange={(e) => setCaption(e.target.value)}
-                  className="resize-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="tags">Tags (comma separated)</Label>
                 <Input 
-                  id="tags"
-                  placeholder="fun, trending, challenge"
-                  value={tags}
-                  onChange={(e) => setTags(e.target.value)}
+                  ref={videoInputRef}
+                  type="file" 
+                  accept="video/*" 
+                  className="hidden" 
+                  onChange={handleFileChange} 
                 />
               </div>
-            </>
-          )}
-        </div>
+            )}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          {videoFile && !isRecording && (
-            <Button 
-              onClick={handleUpload} 
-              disabled={isUploading}
-            >
-              {isUploading ? "Uploading..." : "Post Video"}
+            {(videoFile || isRecording) && !isRecording && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="caption">Caption</Label>
+                  <Textarea 
+                    id="caption"
+                    placeholder="Add a caption to your video"
+                    value={caption}
+                    onChange={(e) => setCaption(e.target.value)}
+                    className="resize-none"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tags">Tags (comma separated)</Label>
+                  <Input 
+                    id="tags"
+                    placeholder="fun, trending, challenge"
+                    value={tags}
+                    onChange={(e) => setTags(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancel}>
+              Cancel
             </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            {videoFile && !isRecording && (
+              <Button 
+                onClick={handleUpload} 
+                disabled={isUploading}
+              >
+                {isUploading ? "Uploading..." : "Post Video"}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {showEditor && (
+        <VideoEditor
+          isOpen={showEditor}
+          onClose={() => {
+            setShowEditor(false);
+            if (videoPreview) {
+              URL.revokeObjectURL(videoPreview);
+            }
+            setVideoFile(null);
+            setVideoPreview(null);
+            onClose();
+          }}
+          onSuccess={onSuccess}
+          initialVideo={videoFile}
+        />
+      )}
+    </>
   );
 };
 
