@@ -28,7 +28,7 @@ export const mockUsers: AppUser[] = [
   },
 ];
 
-export const mockStories = [
+export const mockStories: Story[] = [
   {
     id: '1',
     username: 'johndoe',
@@ -106,7 +106,7 @@ export const mockStories = [
     hasNewStory: true,
     isUser: true
   }
-] as Story[];
+];
 
 export const mockPosts: Post[] = [
   {
