@@ -143,7 +143,7 @@ export const useVideoData = () => {
         
         setAllItems(itemsWithAd);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching videos:", error);
       // Fall back to mock data on error
       const itemsWithAd = [
