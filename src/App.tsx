@@ -1,190 +1,107 @@
-
+import React from "react";
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { MarketplaceProvider } from "./contexts/MarketplaceContext";
-import { ChatProvider } from "./contexts/ChatContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import AppLayout from "./components/layout/AppLayout";
-import Auth from "./pages/Auth";
-import EnhancedFeed from "./pages/EnhancedFeed";
+import Home from "./pages/Home";
+import Feed from "./pages/Feed";
 import Profile from "./pages/Profile";
-import Wallet from "./pages/Wallet";
-import Marketplace from "./pages/Marketplace";
-import MarketplaceCart from "./pages/marketplace/MarketplaceCart";
-import MarketplaceCheckout from "./pages/marketplace/MarketplaceCheckout";
-import MarketplaceList from "./pages/marketplace/MarketplaceList";
-import MarketplaceSeller from "./pages/marketplace/MarketplaceSeller";
-import MarketplaceWishlist from "./pages/marketplace/MarketplaceWishlist";
-import MarketplaceDashboard from "./pages/marketplace/MarketplaceDashboard";
-import CryptoMarket from "./pages/CryptoMarket";
-import NotFound from "./pages/NotFound";
-import Rewards from "./pages/Rewards";
 import Settings from "./pages/Settings";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import UserManagement from "./pages/admin/UserManagement";
-import Videos from "./pages/Videos";
-import Chat from "./pages/Chat";
-import Explore from "./pages/Explore";
-import Index from "./pages/Index";
+import Marketplace from "./pages/Marketplace";
+import Wallet from "./pages/Wallet";
+import Notifications from "./pages/Notifications";
+import Messages from "./pages/Messages";
+import { HelmetProvider } from 'react-helmet-async';
+import EnhancedFeed from "./pages/EnhancedFeed";
+import Community from "./pages/Community";
 
-// Create a query client with retry configuration
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1, // Only retry once to avoid excessive requests during auth issues
-      refetchOnWindowFocus: false, // Disable refetching when window regains focus
-    },
+function App() {
+  return (
+    <HelmetProvider>
+      <AuthProvider>
+        <RouterProvider router={router} />
+        <Toaster />
+      </AuthProvider>
+    </HelmetProvider>
+  );
+}
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: (
+      <AppLayout>
+        <Home />
+      </AppLayout>
+    ),
   },
-});
-
-// Protected route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  // Show loading state while checking authentication
-  if (isLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Checking authentication...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Redirect to auth page if not authenticated
-  if (!isAuthenticated) {
-    console.log("Not authenticated, redirecting to /auth");
-    return <Navigate to="/auth" replace />;
-  }
-
-  console.log("Authentication confirmed, rendering protected route");
-  return <>{children}</>;
-};
-
-// Admin route component
-const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading, isAdmin } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Checking admin rights...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
-  }
-
-  if (!isAdmin()) {
-    return <Navigate to="/feed" replace />;
-  }
-
-  return <>{children}</>;
-};
-
-// App routes component that uses auth context
-const AppRoutes = () => {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  // If still loading auth state, show splash screen
-  if (isLoading) {
-    console.log("App routes: Auth is loading");
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading Softchat...</p>
-          <p className="text-xs text-muted-foreground mt-2">Initializing session</p>
-        </div>
-      </div>
-    );
-  }
-
-  console.log("App routes: Auth state determined", { isAuthenticated });
-
-  return (
-    <Routes>
-      {/* Root path redirects based on auth state */}
-      <Route path="/" element={<Index />} />
-
-      {/* Auth route - redirects to feed if already authenticated */}
-      <Route
-        path="/auth"
-        element={isAuthenticated ? <Navigate to="/feed" replace /> : <Auth />}
-      />
-
-      {/* Protected routes inside app layout */}
-      <Route path="/" element={
-        <ProtectedRoute>
-          <MarketplaceProvider>
-            <ChatProvider>
-              <AppLayout />
-            </ChatProvider>
-          </MarketplaceProvider>
-        </ProtectedRoute>
-      }>
-        <Route path="feed" element={<EnhancedFeed />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="wallet" element={<Wallet />} />
-
-        {/* Marketplace routes */}
-        <Route path="marketplace" element={<Marketplace />} />
-        <Route path="marketplace/my" element={<MarketplaceDashboard />} />
-        <Route path="marketplace/list" element={<MarketplaceList />} />
-        <Route path="marketplace/seller/:username" element={<MarketplaceSeller />} />
-        <Route path="marketplace/wishlist" element={<MarketplaceWishlist />} />
-        <Route path="marketplace/cart" element={<MarketplaceCart />} />
-        <Route path="marketplace/checkout" element={<MarketplaceCheckout />} />
-
-        <Route path="crypto" element={<CryptoMarket />} />
-        <Route path="rewards" element={<Rewards />} />
-        <Route path="videos" element={<Videos />} />
-        <Route path="chat" element={<Chat />} />
-        <Route path="explore" element={<Explore />} />
-        <Route path="settings" element={<Settings />} />
-
-      </Route>
-
-      {/* Admin Routes */}
-      <Route path="/admin" element={
-        <AdminRoute>
-          <AppLayout />
-        </AdminRoute>
-      }>
-        <Route path="dashboard" element={<AdminDashboard />} />
-        <Route path="users" element={<UserManagement />} />
-      </Route>
-
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-};
-
-const App = () => {
-  console.log("App rendering");
-  return (
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <TooltipProvider>
-            <AppRoutes />
-            <Toaster />
-            <Sonner />
-          </TooltipProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
-  );
-};
+  {
+    path: "/feed",
+    element: (
+      <AppLayout>
+        <EnhancedFeed />
+      </AppLayout>
+    ),
+  },
+  {
+    path: "/profile/:username",
+    element: (
+      <AppLayout>
+        <Profile />
+      </AppLayout>
+    ),
+  },
+  {
+    path: "/settings",
+    element: (
+      <AppLayout>
+        <Settings />
+      </AppLayout>
+    ),
+  },
+  {
+    path: "/marketplace",
+    element: (
+      <AppLayout>
+        <Marketplace />
+      </AppLayout>
+    ),
+  },
+  {
+    path: "/wallet",
+    element: (
+      <AppLayout>
+        <Wallet />
+      </AppLayout>
+    ),
+  },
+  {
+    path: "/notifications",
+    element: (
+      <AppLayout>
+        <Notifications />
+      </AppLayout>
+    ),
+  },
+  {
+    path: "/messages",
+    element: (
+      <AppLayout>
+        <Messages />
+      </AppLayout>
+    ),
+  },
+  {
+    path: "/community",
+    element: (
+      <AppLayout>
+        <Community />
+      </AppLayout>
+    ),
+  },
+]);
 
 export default App;

@@ -10,7 +10,7 @@ import FeedSkeleton from "@/components/feed/FeedSkeleton";
 import { useFeed } from "@/hooks/use-feed";
 import { mockStories } from "@/data/mockFeedData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Image, UserPlus, Video, MapPin, Smile, X } from "lucide-react";
+import { Image, UserPlus, Video, MapPin, Smile, X, BarChart2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,10 @@ const EnhancedFeed = () => {
   const [taggedUsers, setTaggedUsers] = useState<string[]>([]);
   const [showUserSuggestions, setShowUserSuggestions] = useState(false);
   const [suggestedUsers, setSuggestedUsers] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState("post");
+  const [isPollMode, setIsPollMode] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState<string[]>(["", ""]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const loaderRef = useRef<HTMLDivElement>(null);
 
@@ -150,27 +154,82 @@ const EnhancedFeed = () => {
     setPostContent(postContent.replace(`@${username}`, ""));
   };
 
-  const handlePostSubmit = async () => {
-    if (!postContent.trim() && !selectedFile) return;
+  const handlePollOptionChange = (index: number, value: string) => {
+    const newOptions = [...pollOptions];
+    newOptions[index] = value;
+    setPollOptions(newOptions);
+  };
 
-    setIsPosting(true);
-    try {
-      await handleCreatePost({
-        content: postContent,
-        mediaUrl: previewUrl || undefined,
-        location,
-        taggedUsers
-      });
-      setPostContent("");
-      setSelectedFile(null);
-      setPreviewUrl(null);
-      setLocation(null);
-      setTaggedUsers([]);
-      notification.success("Post created successfully");
-    } catch (error) {
-      notification.error("Failed to create post");
-    } finally {
-      setIsPosting(false);
+  const addPollOption = () => {
+    if (pollOptions.length < 5) {
+      setPollOptions([...pollOptions, ""]);
+    } else {
+      notification.info("Maximum 5 options allowed");
+    }
+  };
+
+  const removePollOption = (index: number) => {
+    if (pollOptions.length <= 2) {
+      notification.info("At least 2 options are required");
+      return;
+    }
+    
+    const newOptions = [...pollOptions];
+    newOptions.splice(index, 1);
+    setPollOptions(newOptions);
+  };
+
+  const handlePostSubmit = async () => {
+    if (isPollMode) {
+      if (!pollQuestion.trim()) {
+        notification.error("Please enter a poll question");
+        return;
+      }
+      
+      const validOptions = pollOptions.filter(option => option.trim().length > 0);
+      if (validOptions.length < 2) {
+        notification.error("Please add at least 2 options");
+        return;
+      }
+      
+      setIsPosting(true);
+      
+      try {
+        // In a real app, we'd submit the poll to an API
+        // For now, we'll just simulate success
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        notification.success("Poll created successfully");
+        setPollQuestion("");
+        setPollOptions(["", ""]);
+        setIsPollMode(false);
+        setActiveTab("post");
+      } catch (error) {
+        notification.error("Failed to create poll");
+      } finally {
+        setIsPosting(false);
+      }
+    } else {
+      if (!postContent.trim() && !selectedFile) return;
+
+      setIsPosting(true);
+      try {
+        await handleCreatePost({
+          content: postContent,
+          mediaUrl: previewUrl || undefined,
+          location,
+          taggedUsers
+        });
+        setPostContent("");
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        setLocation(null);
+        setTaggedUsers([]);
+        notification.success("Post created successfully");
+      } catch (error) {
+        notification.error("Failed to create post");
+      } finally {
+        setIsPosting(false);
+      }
     }
   };
 
@@ -197,11 +256,15 @@ const EnhancedFeed = () => {
 
         {/* Create Post Box with Tabs */}
         <div className="bg-background rounded-lg shadow mb-6 overflow-hidden">
-          <Tabs defaultValue="post" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+          <Tabs defaultValue="post" value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="post" className="flex items-center gap-2">
                 <Image className="h-4 w-4" />
                 <span>Post</span>
+              </TabsTrigger>
+              <TabsTrigger value="poll" className="flex items-center gap-2">
+                <BarChart2 className="h-4 w-4" />
+                <span>Poll</span>
               </TabsTrigger>
               <TabsTrigger value="video" className="flex items-center gap-2">
                 <Video className="h-4 w-4" />
@@ -354,6 +417,64 @@ const EnhancedFeed = () => {
               </div>
             </TabsContent>
 
+            <TabsContent value="poll" className="p-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name || "User"} />
+                  <AvatarFallback>{user?.name?.substring(0, 2).toUpperCase() || "U"}</AvatarFallback>
+                </Avatar>
+                <Textarea
+                  placeholder="Ask a question..."
+                  className="flex-1 resize-none"
+                  value={pollQuestion}
+                  onChange={(e) => setPollQuestion(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-3 mt-2">
+                <h4 className="font-medium text-sm">Poll Options</h4>
+                {pollOptions.map((option, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Input
+                      value={option}
+                      onChange={(e) => handlePollOptionChange(index, e.target.value)}
+                      placeholder={`Option ${index + 1}`}
+                      className="flex-1"
+                    />
+                    {index > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removePollOption(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                
+                {pollOptions.length < 5 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={addPollOption}
+                    className="w-full"
+                  >
+                    + Add Option
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex justify-end mt-4">
+                <Button
+                  onClick={handlePostSubmit}
+                  disabled={isPosting || !pollQuestion.trim() || pollOptions.filter(o => o.trim()).length < 2}
+                >
+                  {isPosting ? "Creating Poll..." : "Create Poll"}
+                </Button>
+              </div>
+            </TabsContent>
+
             <TabsContent value="video" className="p-4 space-y-4">
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
@@ -384,35 +505,71 @@ const EnhancedFeed = () => {
           </Tabs>
         </div>
 
-        <div className="space-y-6">
-          {isLoading && posts.length === 0 ? (
-            <FeedSkeleton />
-          ) : (
-            <>
-              {posts.map((post) => (
-                <div key={post.id} className="space-y-2">
-                  <EnhancedPostCard post={post} />
-                  <CommentSection
-                    postId={post.id}
-                    comments={postComments[post.id] || []}
-                    onAddComment={handleAddComment}
-                  />
-                </div>
-              ))}
+        <Tabs defaultValue="following" className="mb-6">
+          <TabsList className="w-full grid grid-cols-2 mb-4">
+            <TabsTrigger value="following">Following</TabsTrigger>
+            <TabsTrigger value="foryou">For You</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="following">
+            <div className="space-y-6">
+              {isLoading && posts.length === 0 ? (
+                <FeedSkeleton />
+              ) : (
+                <>
+                  {posts.map((post) => (
+                    <div key={post.id} className="space-y-2">
+                      <EnhancedPostCard post={post} />
+                      <CommentSection
+                        postId={post.id}
+                        comments={postComments[post.id] || []}
+                        onAddComment={handleAddComment}
+                      />
+                    </div>
+                  ))}
 
-              {/* Infinite scroll loader */}
-              <div ref={loaderRef} className="flex justify-center py-4">
-                {isLoading && posts.length > 0 ? (
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                ) : hasMore ? (
-                  <p className="text-muted-foreground text-sm">Scroll to load more</p>
-                ) : (
-                  <p className="text-muted-foreground text-sm">No more posts to load</p>
-                )}
-              </div>
-            </>
-          )}
-        </div>
+                  {/* Sample poll for demonstration */}
+                  <PollCard
+                    poll={{
+                      id: "poll-1",
+                      author: {
+                        name: "Tech Poll",
+                        username: "techpolls",
+                        avatar: "/placeholder.svg",
+                        verified: true
+                      },
+                      question: "What's your favorite programming language?",
+                      options: [
+                        { id: "1", text: "JavaScript", votes: 42 },
+                        { id: "2", text: "Python", votes: 38 },
+                        { id: "3", text: "TypeScript", votes: 27 },
+                        { id: "4", text: "Java", votes: 18 }
+                      ],
+                      totalVotes: 125,
+                      endsAt: new Date(Date.now() + 86400000).toISOString(), // 24h from now
+                      createdAt: "2h ago"
+                    }}
+                  />
+
+                  {/* Infinite scroll loader */}
+                  <div ref={loaderRef} className="flex justify-center py-4">
+                    {isLoading && posts.length > 0 ? (
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    ) : hasMore ? (
+                      <p className="text-muted-foreground text-sm">Scroll to load more</p>
+                    ) : (
+                      <p className="text-muted-foreground text-sm">No more posts to load</p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="foryou">
+            <ForYouFeed />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
